@@ -4,10 +4,10 @@ import logging
 import random
 import numpy as np
 
-from utils.config import Config
-from utils.visualization.plot_images_grid import plot_images_grid
-from deepSVDD import DeepSVDD
-from datasets.main import load_dataset
+from src.utils.config import Config
+from src.utils.visualization.plot_images_grid import plot_images_grid
+from src.deepSVDD import DeepSVDD
+from src.datasets.main import load_dataset
 
 
 ################################################################################
