@@ -90,6 +90,8 @@ class DeepSVDD(object):
                  n_jobs_dataloader: int = 0):
         """Pretrains the weights for the Deep SVDD network \phi via autoencoder."""
 
+        # 他们是先使用autoencoder进行一个pretrain,然后将训练的网络参数赋初值给network
+
         self.ae_net = build_autoencoder(self.net_name)
         self.ae_optimizer_name = optimizer_name
         self.ae_trainer = AETrainer(optimizer_name, lr=lr, n_epochs=n_epochs, lr_milestones=lr_milestones,

@@ -10,6 +10,7 @@ class CIFAR10_LeNet(BaseNet):
     def __init__(self):
         super().__init__()
 
+        # 这里的这个fc的输出维度和mnist的不同
         self.rep_dim = 128
         self.pool = nn.MaxPool2d(2, 2)
 

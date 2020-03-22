@@ -11,6 +11,7 @@ def load_dataset(dataset_name, data_path, normal_class):
     dataset = None
 
     if dataset_name == 'mnist':
+        # 这里的data path就是../data
         dataset = MNIST_Dataset(root=data_path, normal_class=normal_class)
 
     if dataset_name == 'cifar10':

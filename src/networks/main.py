@@ -17,6 +17,7 @@ def build_network(net_name):
     if net_name == 'cifar10_LeNet':
         net = CIFAR10_LeNet()
 
+    # ELU 指的是使用ELU函数而不使用leaky-relu
     if net_name == 'cifar10_LeNet_ELU':
         net = CIFAR10_LeNet_ELU()
 

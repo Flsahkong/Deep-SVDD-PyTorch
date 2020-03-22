@@ -13,6 +13,8 @@ class MNIST_Dataset(TorchvisionDataset):
         super().__init__(root)
 
         self.n_classes = 2  # 0: normal, 1: outlier
+
+        # 由于mnist总共有十个种类,所以这里就设置3为正常的normal-class,而其他的都是outlier-class
         self.normal_classes = tuple([normal_class])
         self.outlier_classes = list(range(0, 10))
         self.outlier_classes.remove(normal_class)
@@ -29,7 +31,9 @@ class MNIST_Dataset(TorchvisionDataset):
                    (-0.8280402650205075, 10.581538445782988),
                    (-0.7369959242164307, 10.697039838804978)]
 
+        # GCN就是global contrast normalization
         # MNIST preprocessing: GCN (with L1 norm) and min-max feature scaling to [0,1]
+        # 将多个归一化的方法组合起来使用
         transform = transforms.Compose([transforms.ToTensor(),
                                         transforms.Lambda(lambda x: global_contrast_normalization(x, scale='l1')),
                                         transforms.Normalize([min_max[normal_class][0]],
@@ -37,10 +41,16 @@ class MNIST_Dataset(TorchvisionDataset):
 
         target_transform = transforms.Lambda(lambda x: int(x in self.outlier_classes))
 
+        # 这个类应该是会检测是否有数据集,没有的话会自己下载
         train_set = MyMNIST(root=self.root, train=True, download=True,
                             transform=transform, target_transform=target_transform)
+        # 这个train-set.train-labels就是train数据对应的labels,下面这句代码是得到数据3这个label对应的index
         # Subset train_set to normal class
         train_idx_normal = get_target_label_idx(train_set.train_labels.clone().data.cpu().numpy(), self.normal_classes)
+
+        # 重点之中的重点!!!
+        # 这里进行了一个subset操作,经过train的数据验证,可以证明,这里的操作是的进行train的数据只有label是3的,而label不是3的则没有进行训练
+        # 但是test的时候,没有进行subset,进行test的是所有的数据.
         self.train_set = Subset(train_set, train_idx_normal)
 
         self.test_set = MyMNIST(root=self.root, train=False, download=True,
@@ -75,4 +85,5 @@ class MyMNIST(MNIST):
         if self.target_transform is not None:
             target = self.target_transform(target)
 
+        # 这里返回的这个index是在test的时候,for data in dataloader后面,inputs, labels, idx = data那里用到的
         return img, target, index  # only line changed

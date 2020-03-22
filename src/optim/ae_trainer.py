@@ -11,6 +11,9 @@ import numpy as np
 
 
 class AETrainer(BaseTrainer):
+    """
+    在这里写好preTrain的train和test函数,来进行训练
+    """
 
     def __init__(self, optimizer_name: str = 'adam', lr: float = 0.001, n_epochs: int = 150, lr_milestones: tuple = (),
                  batch_size: int = 128, weight_decay: float = 1e-6, device: str = 'cuda', n_jobs_dataloader: int = 0):
@@ -23,6 +26,7 @@ class AETrainer(BaseTrainer):
         # Set device for network
         ae_net = ae_net.to(self.device)
 
+        # 这里的这个dataLoader是从torchvision_dataset那里继承来的,返回了train_loader和test_loader
         # Get train data loader
         train_loader, _ = dataset.loaders(batch_size=self.batch_size, num_workers=self.n_jobs_dataloader)
 
@@ -31,11 +35,13 @@ class AETrainer(BaseTrainer):
                                amsgrad=self.optimizer_name == 'amsgrad')
 
         # Set learning rate scheduler
+        # 这里使用的是一个multiStep的LR
         scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=self.lr_milestones, gamma=0.1)
 
         # Training
         logger.info('Starting pretraining...')
         start_time = time.time()
+        # 设置为训练模式
         ae_net.train()
         for epoch in range(self.n_epochs):
 
@@ -46,6 +52,10 @@ class AETrainer(BaseTrainer):
             loss_epoch = 0.0
             n_batches = 0
             epoch_start_time = time.time()
+
+            # 根据验证这里每一个opoch对应的batch数目为31,且batch的大小为200可知,总共的数目可以看到是6131,这个数目和处理数据的时候,
+            # labels是3的数据的数目是一样的
+
             for data in train_loader:
                 inputs, _, _ = data
                 inputs = inputs.to(self.device)

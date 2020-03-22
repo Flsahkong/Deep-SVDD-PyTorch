@@ -113,9 +113,12 @@ def main(dataset_name, net_name, xp_path, data_path, load_config, load_model, ob
     # Load data
     dataset = load_dataset(dataset_name, data_path, normal_class)
 
+    # 创建Deep_SVDD对象,这个对象并非就是模型对应的对象
     # Initialize DeepSVDD model and set neural network \phi
     deep_SVDD = DeepSVDD(cfg.settings['objective'], cfg.settings['nu'])
     deep_SVDD.set_network(net_name)
+
+    # 如果有已经训练好的模型,就加载模型
     # If specified, load Deep SVDD model (radius R, center c, network weights, and possibly autoencoder weights)
     if load_model:
         deep_SVDD.load_model(model_path=load_model, load_ae=True)

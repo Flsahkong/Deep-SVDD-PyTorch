@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 from src.base.base_net import BaseNet
 
-
+# 继承了这个BaseNEt之后,就可以直接写一写logger
 class MNIST_LeNet(BaseNet):
 
     def __init__(self):
@@ -21,6 +21,7 @@ class MNIST_LeNet(BaseNet):
 
     def forward(self, x):
         x = self.conv1(x)
+        # 使用的是leaky_relu函数
         x = self.pool(F.leaky_relu(self.bn1(x)))
         x = self.conv2(x)
         x = self.pool(F.leaky_relu(self.bn2(x)))

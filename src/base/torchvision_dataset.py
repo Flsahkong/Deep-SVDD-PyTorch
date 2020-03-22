@@ -1,7 +1,7 @@
 from .base_dataset import BaseADDataset
 from torch.utils.data import DataLoader
 
-
+# 继承自BaseADDataset
 class TorchvisionDataset(BaseADDataset):
     """TorchvisionDataset class for datasets already implemented in torchvision.datasets."""
 

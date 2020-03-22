@@ -17,6 +17,10 @@ def global_contrast_normalization(x: torch.tensor, scale='l2'):
     Apply global contrast normalization to tensor, i.e. subtract mean across features (pixels) and normalize by scale,
     which is either the standard deviation, L1- or L2-norm across features (pixels).
     Note this is a *per sample* normalization globally across features (and not across the dataset).
+
+    对张量应用全局对比度归一化，即减去特征（像素）的均值并按比例归一化，
+    这是要素（像素）上的标准偏差L1或L2范数。
+    请注意，这是整个要素（而非整个数据集）的“每个样本”归一化。
     """
 
     assert scale in ('l1', 'l2')

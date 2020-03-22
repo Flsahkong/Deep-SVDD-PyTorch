@@ -55,6 +55,9 @@ class DeepSVDDTrainer(BaseTrainer):
         # Initialize hypersphere center c (if c not loaded)
         if self.c is None:
             logger.info('Initializing center c...')
+
+            # 需要注意的是,这里的c是针对网络的最后一层输出的每一个cell都有一个center
+            # 另外,这个c是不随着网络更新的,只是在最开始的时候生成一次,这就导致前面的autoencoder一定要进行了咯?????
             self.c = self.init_center_c(train_loader, net)
             logger.info('Center c initialized.')
 
@@ -72,6 +75,7 @@ class DeepSVDDTrainer(BaseTrainer):
             n_batches = 0
             epoch_start_time = time.time()
             for data in train_loader:
+                # 第一个是所有的图片,第二个是图片对应的label,这里每个的label都是0,第三个是这个图片在数据集中对应的index
                 inputs, _, _ = data
                 inputs = inputs.to(self.device)
 
@@ -80,11 +84,15 @@ class DeepSVDDTrainer(BaseTrainer):
 
                 # Update network parameters via backpropagation: forward + backward + optimize
                 outputs = net(inputs)
+
+                # 这里就对应论文里面的loss了
                 dist = torch.sum((outputs - self.c) ** 2, dim=1)
+
                 if self.objective == 'soft-boundary':
                     scores = dist - self.R ** 2
                     loss = self.R ** 2 + (1 / self.nu) * torch.mean(torch.max(torch.zeros_like(scores), scores))
                 else:
+                     # 对应我需要的情况
                     loss = torch.mean(dist)
                 loss.backward()
                 optimizer.step()
@@ -124,8 +132,14 @@ class DeepSVDDTrainer(BaseTrainer):
         net.eval()
         with torch.no_grad():
             for data in test_loader:
+                # 这里的label全部都是0和1,其中,1的比例占9份,0的比例占1份,这正好符合
+                # 另外测试的时候并没有打乱数据,数据是按照index的0开始的顺序排列的.
                 inputs, labels, idx = data
                 inputs = inputs.to(self.device)
+                # 对下面几句代码的解释
+                # output的输出为[128,32],其中128是batch的大小,32是网络的输出
+                # self.c大小是[32]
+                # 经过torch.sum之后,dist等于是将所有的output加了起来.变为了dist的大小为[128],作为输出的score
                 outputs = net(inputs)
                 dist = torch.sum((outputs - self.c) ** 2, dim=1)
                 if self.objective == 'soft-boundary':
@@ -133,6 +147,7 @@ class DeepSVDDTrainer(BaseTrainer):
                 else:
                     scores = dist
 
+                # 这里是将数据整合成元组
                 # Save triples of (idx, label, score) in a list
                 idx_label_score += list(zip(idx.cpu().data.numpy().tolist(),
                                             labels.cpu().data.numpy().tolist(),
@@ -141,13 +156,16 @@ class DeepSVDDTrainer(BaseTrainer):
         self.test_time = time.time() - start_time
         logger.info('Testing time: %.3f' % self.test_time)
 
+        # 这个idx_label_score整合之后,数据的序列是按照index的顺序排列的.
         self.test_scores = idx_label_score
 
         # Compute AUC
+        # labels里面是0和1,scores是网络输出的scores
         _, labels, scores = zip(*idx_label_score)
         labels = np.array(labels)
         scores = np.array(scores)
 
+        # 这个函数计算的是一个面积,他并不是按照预测的scores是不是大于0.5来看的,是要计算一个面积的.具体看我的笔记
         self.test_auc = roc_auc_score(labels, scores)
         logger.info('Test set AUC: {:.2f}%'.format(100. * self.test_auc))
 
@@ -160,6 +178,7 @@ class DeepSVDDTrainer(BaseTrainer):
 
         net.eval()
         with torch.no_grad():
+            # 这里就是将数据走一遍,output有rep_dim个数据,
             for data in train_loader:
                 # get the inputs of the batch
                 inputs, _, _ = data
@@ -168,6 +187,7 @@ class DeepSVDDTrainer(BaseTrainer):
                 n_samples += outputs.shape[0]
                 c += torch.sum(outputs, dim=0)
 
+        # 这里计算出来的这个c,是针对网络输出的每个cell,都有一个对应的c
         c /= n_samples
 
         # If c_i is too close to 0, set to +-eps. Reason: a zero unit can be trivially matched with zero weights.

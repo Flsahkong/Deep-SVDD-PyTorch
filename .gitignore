@@ -105,3 +105,12 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+
+# my add
+/data/cifar-10-batches-py
+/data/cifar-10-python.tar.gz
+/data/processed
+/data/raw
+
+/log/cifar10_test
+/log/mnist_test
