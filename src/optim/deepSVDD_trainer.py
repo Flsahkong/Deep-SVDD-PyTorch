@@ -61,6 +61,8 @@ class DeepSVDDTrainer(BaseTrainer):
             self.c = self.init_center_c(train_loader, net)
             logger.info('Center c initialized.')
 
+        # 这里计算的c是32的大小,这个程序的batchsize是200
+
         # Training
         logger.info('Starting training...')
         start_time = time.time()
@@ -84,6 +86,10 @@ class DeepSVDDTrainer(BaseTrainer):
 
                 # Update network parameters via backpropagation: forward + backward + optimize
                 outputs = net(inputs)
+                # 得到的outputs是[200,32]七种200是batch的大小
+                # 相当于求每个batch里面，这32个的和
+                # dist大小是200，相当于是这是一个32维的空间，求一个样本到圆心的距离的时候是每一维的距离平方然后求和
+                # 最后对dist的mean反映了公式里面，对n个样本，进行求平均值
 
                 # 这里就对应论文里面的loss了
                 dist = torch.sum((outputs - self.c) ** 2, dim=1)
